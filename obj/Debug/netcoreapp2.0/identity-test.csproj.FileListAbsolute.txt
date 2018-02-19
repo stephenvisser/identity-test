@@ -1,0 +1,10 @@
+/Users/visser/Development/identity-test/bin/Debug/netcoreapp2.0/identity-test.deps.json
+/Users/visser/Development/identity-test/bin/Debug/netcoreapp2.0/identity-test.runtimeconfig.json
+/Users/visser/Development/identity-test/bin/Debug/netcoreapp2.0/identity-test.runtimeconfig.dev.json
+/Users/visser/Development/identity-test/bin/Debug/netcoreapp2.0/identity-test.dll
+/Users/visser/Development/identity-test/bin/Debug/netcoreapp2.0/identity-test.pdb
+/Users/visser/Development/identity-test/obj/Debug/netcoreapp2.0/identity-test.csproj.CoreCompileInputs.cache
+/Users/visser/Development/identity-test/obj/Debug/netcoreapp2.0/identity-test.AssemblyInfoInputs.cache
+/Users/visser/Development/identity-test/obj/Debug/netcoreapp2.0/identity-test.AssemblyInfo.cs
+/Users/visser/Development/identity-test/obj/Debug/netcoreapp2.0/identity-test.dll
+/Users/visser/Development/identity-test/obj/Debug/netcoreapp2.0/identity-test.pdb
