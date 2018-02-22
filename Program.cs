@@ -12,13 +12,6 @@ using Microsoft.Extensions.Configuration.AzureKeyVault;
 namespace identity_test
 {
 
-    public class KeyVaultConfiguration
-    {
-        public string Name { get; set; }
-        public string ApplicationId { get; set; }
-        public string ClientSecret { get; set; }
-    }
-
     public class Program
     {
         public static void Main(string[] args)
@@ -26,8 +19,14 @@ namespace identity_test
             BuildWebHost(args).Run();
         }
 
+        private class KeyVaultConfiguration
+        {
+            public string Name { get; set; }
+            public string ApplicationId { get; set; }
+            public string ClientSecret { get; set; }
+        }
         
-        public static KeyVaultConfiguration GetKeyVaultConfiguration(IHostingEnvironment env) 
+        private static KeyVaultConfiguration GetKeyVaultConfiguration(IHostingEnvironment env) 
         {
             //KeyVault configuration can be found in appsettings or environment variables
             //We won't need to do things this way once .NET Core 2.1 comes out; it will have
@@ -46,7 +45,6 @@ namespace identity_test
             return rootConfig.GetSection("KeyVault").Get<KeyVaultConfiguration>();
         }
 
-
         public static IWebHost BuildWebHost(string[] args) {
 
             return WebHost.CreateDefaultBuilder(args)
@@ -62,6 +60,5 @@ namespace identity_test
                 .UseStartup<Startup>()
                 .Build();
         }
-
     }
 }
