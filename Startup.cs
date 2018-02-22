@@ -31,30 +31,27 @@ namespace identity_test
         {
             Configuration = configuration;
         }
-        // This method gets called by the runtime. Use this method to add services to the container.
-        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
-        public void ConfigureServices(IServiceCollection services)
+
+        public void SetOptionsForOpenIdConnectPolicy(string policy, AzureAdB2COptions b2cOptions, OpenIdConnectOptions options)
         {
-            services.Configure<AzureAdB2COptions>(Configuration.GetSection("AzureAdB2C"));
+            options.MetadataAddress = $"https://login.microsoftonline.com/{b2cOptions.Tenant}/v2.0/.well-known/openid-configuration?p={policy}";
+            options.ClientId = b2cOptions.ClientId;
+            options.ResponseType = OpenIdConnectResponseType.IdToken;
+            options.CallbackPath = $"/signin/{policy}";
+            options.SignedOutCallbackPath = $"/signout/{policy}";
+            options.SignedOutRedirectUri = "/";
+            options.TokenValidationParameters.NameClaimType = "name";
+        }
 
-            // services.AddSession(options =>
-            // {
-            //     options.IdleTimeout = TimeSpan.FromHours(1);
-            //     options.Cookie.HttpOnly = true;
-            // });
-
-
-            services.AddAuthentication(CookieAuthenticationDefaults.AuthenticationScheme)
-                .AddOpenIdConnect(options => {
-                    options.ClientId = Configuration["AzureAD:ClientId"];
-                    options.Authority = string.Format(CultureInfo.InvariantCulture, Configuration["AzureAd:AadInstance"], "common", "/v2.0");
-                    options.ResponseType = OpenIdConnectResponseType.IdToken;
-                    options.SignedOutRedirectUri = Configuration["AzureAd:PostLogoutRedirectUri"];
-                    options.Events = new OpenIdConnectEvents
-                    {
-                        OnAuthenticationFailed = RemoteFailure,
-                        OnTokenValidated = TokenValidated
-                    };
+                    // options.ClientId = Configuration["AzureAD:ClientId"];
+                    // options.Authority = string.Format(CultureInfo.InvariantCulture, Configuration["AzureAd:AadInstance"], "common", "/v2.0");
+                    // options.ResponseType = OpenIdConnectResponseType.IdToken;
+                    // options.SignedOutRedirectUri = Configuration["AzureAd:PostLogoutRedirectUri"];
+                    // options.Events = new OpenIdConnectEvents
+                    // {
+                    //     OnAuthenticationFailed = RemoteFailure,
+                    //     OnTokenValidated = TokenValidated
+                    // };
                     // options.TokenValidationParameters = new TokenValidationParameters
                     // {
                     //     // Instead of using the default validation (validating against
@@ -64,13 +61,31 @@ namespace identity_test
 
                     //     NameClaimType = "name"
                     // };
-            });
+
+        // This method gets called by the runtime. Use this method to add services to the container.
+        // For more information on how to configure your application, visit https://go.microsoft.com/fwlink/?LinkID=398940
+        public void ConfigureServices(IServiceCollection services)
+        {
+            // Takes configuration from appsettings.json, environment variables, and KeyVault
+            // (KeyVault added in Program.cs)
+            var b2cOptions = Configuration.GetSection("AzureAdB2C").Get<AzureAdB2COptions>();
+
+            services.AddAuthentication(options => {
+                    options.DefaultScheme = CookieAuthenticationDefaults.AuthenticationScheme;
+                    options.DefaultChallengeScheme = "B2C_1_sign_up_in";
+                })
+                .AddOpenIdConnect("B2C_1_sign_up_in", options => SetOptionsForOpenIdConnectPolicy("B2C_1_sign_up_in", b2cOptions, options))
+                .AddCookie();
+
 
             services.AddMvc(config => 
             {
+                //Same as adding [Authorize] attribute to all controllers & actions
                 var policy = new AuthorizationPolicyBuilder()
                          .RequireAuthenticatedUser()
                          .Build();
+                         
+                         
                 config.Filters.Add(new AuthorizeFilter(policy));
             });
         }
@@ -92,6 +107,8 @@ namespace identity_test
                 // app.UseExceptionHandler("/error");
             }
             // app.UseSession();
+
+            app.UseStatusCodePages();
 
             app.UseAuthentication();
 

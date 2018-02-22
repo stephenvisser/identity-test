@@ -11,6 +11,14 @@ using Microsoft.Extensions.Configuration.AzureKeyVault;
 
 namespace identity_test
 {
+
+    public class KeyVaultConfiguration
+    {
+        public string Name { get; set; }
+        public string ApplicationId { get; set; }
+        public string ClientSecret { get; set; }
+    }
+
     public class Program
     {
         public static void Main(string[] args)
@@ -18,18 +26,42 @@ namespace identity_test
             BuildWebHost(args).Run();
         }
 
-        public static IWebHost BuildWebHost(string[] args) =>
-            WebHost.CreateDefaultBuilder(args)
+        
+        public static KeyVaultConfiguration GetKeyVaultConfiguration(IHostingEnvironment env) 
+        {
+            //KeyVault configuration can be found in appsettings or environment variables
+            //We won't need to do things this way once .NET Core 2.1 comes out; it will have
+            //chained config as per https://github.com/aspnet/Configuration/issues/630
+            var config = new ConfigurationBuilder();
+
+            var keyVaultConfig = new KeyVaultConfiguration();
+
+            var rootConfig = config
+                .SetBasePath(env.ContentRootPath)
+                .AddJsonFile("appsettings.json", optional: false, reloadOnChange: true)
+                .AddJsonFile($"appsettings.{env.EnvironmentName}.json", optional: true, reloadOnChange: true)
+                .AddEnvironmentVariables()
+                .Build();
+
+            return rootConfig.GetSection("KeyVault").Get<KeyVaultConfiguration>();
+        }
+
+
+        public static IWebHost BuildWebHost(string[] args) {
+
+            return WebHost.CreateDefaultBuilder(args)
                 .ConfigureAppConfiguration((context, config) =>
                 {
-                    var builtConfig = config.Build();
+                    var keyVaultConfig = GetKeyVaultConfiguration(context.HostingEnvironment);
+
                     config.AddAzureKeyVault(
-                        $"https://{builtConfig["KeyVault:Name"]}.vault.azure.net/",
-                        builtConfig["KeyVault:ApplicationId"],
-                        builtConfig["KeyVault:ClientSecret"]);
+                        $"https://{keyVaultConfig.Name}.vault.azure.net/",
+                        keyVaultConfig.ApplicationId,
+                        keyVaultConfig.ClientSecret);
                 })
                 .UseStartup<Startup>()
                 .Build();
+        }
 
     }
 }

@@ -1,3 +1,11 @@
 ﻿@page
 @model Svper.HomeModel
-<h2>Hello World</h2>
+<h2>Welcome @User.Identity.Name</h2>
+<ul>
+    @foreach (var claim in User.Claims)
+    {
+        <li>
+            @claim.Type: @claim.Value
+        </li>
+    }
+</ul>
