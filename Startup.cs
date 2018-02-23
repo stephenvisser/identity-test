@@ -19,6 +19,7 @@ using Microsoft.Extensions.Logging;
 using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Globalization;
+using Microsoft.AspNetCore.Authentication;
 
 namespace identity_test
 {
@@ -41,6 +42,24 @@ namespace identity_test
             options.SignedOutCallbackPath = $"/signout/{policy}";
             options.SignedOutRedirectUri = "/";
             options.TokenValidationParameters.NameClaimType = "name";
+            options.Events = new OpenIdConnectEvents {
+                OnRemoteFailure = context => {
+                    context.HandleResponse();
+                    context.Response.Redirect("/Auth");
+                    return Task.CompletedTask; 
+                },
+                OnAuthenticationFailed = context => {
+                    context.HandleResponse();
+                    context.Response.Redirect("/Auth");
+                    return Task.CompletedTask;
+                },
+                OnRemoteSignOut = context => {
+                    return context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                },
+                OnRedirectToIdentityProviderForSignOut = context =>  {
+                    return context.HttpContext.SignOutAsync(CookieAuthenticationDefaults.AuthenticationScheme);
+                }
+            };
         }
 
         // This method gets called by the runtime. Use this method to add services to the container.
