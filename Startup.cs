@@ -20,6 +20,8 @@ using Microsoft.IdentityModel.Tokens;
 using Microsoft.IdentityModel.Protocols.OpenIdConnect;
 using System.Globalization;
 using Microsoft.AspNetCore.Authentication;
+using Microsoft.AspNetCore.Mvc;
+using Microsoft.AspNetCore.Rewrite;
 
 namespace identity_test
 {
@@ -38,6 +40,7 @@ namespace identity_test
             options.MetadataAddress = $"https://login.microsoftonline.com/{b2cOptions.Tenant}/v2.0/.well-known/openid-configuration?p={policy}";
             options.ClientId = b2cOptions.ClientId;
             options.ResponseType = OpenIdConnectResponseType.IdToken;
+            options.RequireHttpsMetadata = true;
             options.CallbackPath = $"/signin/{policy}";
             options.SignedOutCallbackPath = $"/signout/{policy}";
             options.SignedOutRedirectUri = "/";
@@ -83,7 +86,7 @@ namespace identity_test
                 var policy = new AuthorizationPolicyBuilder()
                          .RequireAuthenticatedUser()
                          .Build();
-                         
+
                 config.Filters.Add(new AuthorizeFilter(policy));
             });
         }
@@ -97,6 +100,14 @@ namespace identity_test
 
             if (env.IsDevelopment())
             {
+                //I'm assuming that something is in front of Kestrel terminating
+                //TLS connections. I use ngrok.
+                var rewriteOptions = new RewriteOptions().Add(context => {
+                    context.HttpContext.Request.Scheme = "https";
+                });
+
+                app.UseRewriter(rewriteOptions);
+
                 app.UseDeveloperExceptionPage();
                 app.UseBrowserLink();
             }
