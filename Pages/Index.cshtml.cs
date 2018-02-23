@@ -10,10 +10,6 @@ namespace Svper
 {
     public class IndexModel : PageModel
     {       
-        public void onGet(string error, string errorDescription) 
-        {
-            // Console.WriteLine("OH MY GOD");
-        }
         public void OnGet()
         {
         }
